@@ -29,6 +29,18 @@ class Scanner:
             "var": TokenType.VAR,
             "while": TokenType.WHILE,
         }
+        self.single_tokens = {
+            "(": TokenType.LEFT_PAREN,
+            ")": TokenType.RIGHT_PAREN,
+            "{": TokenType.LEFT_BRACE,
+            "}": TokenType.RIGHT_BRACE,
+            ",": TokenType.COMMA,
+            ".": TokenType.DOT,
+            "-": TokenType.MINUS,
+            "+": TokenType.PLUS,
+            ";": TokenType.SEMICOLON,
+            "*": TokenType.STAR,
+        }
 
     def scan_tokens(self) -> list[Token]:
         while not self._is_at_end():
@@ -40,47 +52,26 @@ class Scanner:
     def scan_token(self):
         c = self._advance()
 
-        if c == "(":
-            self.add_token(TokenType.LEFT_PAREN)
-        elif c == ")":
-            self.add_token(TokenType.RIGHT_PAREN)
-        elif c == "{":
-            self.add_token(TokenType.LEFT_BRACE)
-        elif c == "}":
-            self.add_token(TokenType.RIGHT_BRACE)
-        elif c == ",":
-            self.add_token(TokenType.COMMA)
-        elif c == ".":
-            self.add_token(TokenType.DOT)
-        elif c == "-":
-            self.add_token(TokenType.MINUS)
-        elif c == "+":
-            self.add_token(TokenType.PLUS)
-        elif c == ";":
-            self.add_token(TokenType.SEMICOLON)
-        elif c == "*":
-            self.add_token(TokenType.STAR)
+        if c in self.single_tokens:
+            self.add_token(self.single_tokens[c])
 
         elif c == "!":
             if self._match("="):
                 self.add_token(TokenType.BANG_EQUAL)
             else:
                 self.add_token(TokenType.BANG)
-            return
 
         elif c == "=":
             if self._match("="):
                 self.add_token(TokenType.EQUAL_EQUAL)
             else:
                 self.add_token(TokenType.EQUAL)
-            return
 
         elif c == "<":
             if self._match("="):
                 self.add_token(TokenType.LESS_EQUAL)
             else:
                 self.add_token(TokenType.LESS)
-            return
 
         elif c == ">":
             if self._match("="):
@@ -95,33 +86,27 @@ class Scanner:
                     self._advance()
             else:
                 self.add_token(TokenType.SLASH)
-            return
 
-        elif c == " ":
-            pass
-        elif c == "\r":
-            pass
-        elif c == "\t":
-            return
         elif c == "\n":
             self._line += 1
-            return
+
+        elif c.isspace():
+            pass
 
         elif c == '"':
             self._string()
-            return
+
+        elif c.isdigit():
+            self._number()
+
+        elif c.isalpha():
+            self._identifier()
 
         else:
-            if c.isdigit():
-                self._number()
-            elif c.isalpha():
-                self._identifier()
-            else:
-                ErrorHandler.error(self._line, "Unexpected character.")
-            return
+            ErrorHandler.error(self._line, "Unexpected character.")
 
     def add_token(self, type: TokenType, literal=None):
-        text = self.source[self._start: self._cur]
+        text = self.source[self._start : self._cur]
         self.tokens.append(Token(type, text, literal, self._line))
 
     def _string(self):
@@ -135,7 +120,7 @@ class Scanner:
             return
 
         self._advance()
-        value = self.source[self._start + 1: self._cur - 1]
+        value = self.source[self._start + 1 : self._cur - 1]
         self.add_token(TokenType.STRING, value)
 
     def _number(self):
@@ -148,14 +133,14 @@ class Scanner:
             while self._peek().isdigit():
                 self._advance()
 
-        value = float(self.source[self._start: self._cur])
+        value = float(self.source[self._start : self._cur])
         self.add_token(TokenType.NUMBER, value)
 
     def _identifier(self):
         while self._peek().isalnum():
             self._advance()
 
-        text = self.source[self._start: self._cur]
+        text = self.source[self._start : self._cur]
         self.add_token(self.keywords.get(text, TokenType.IDENTIFIER))
 
     def _advance(self):
