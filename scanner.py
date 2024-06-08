@@ -141,7 +141,9 @@ class Scanner:
             self._advance()
 
         text = self.source[self._start : self._cur]
-        self.add_token(self.keywords.get(text, TokenType.IDENTIFIER))
+        type = self.keywords.get(text, TokenType.IDENTIFIER)
+        literal = {"true": True, "false": False, "nil": None}.get(text)
+        self.add_token(type, literal)
 
     def _advance(self):
         if self._is_at_end():
