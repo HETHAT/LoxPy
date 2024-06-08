@@ -2,3 +2,5 @@
 (( )){} // grouping stuff
 !*+-/=<> <= == // operators
 while hi and hello
+true false nil
+"string" 69.7
