@@ -19,6 +19,12 @@ class Parser:
         self.tokens = tokens
         self.cur = 0
 
+    def parse(self):
+        try:
+            return self.expression()
+        except ParseError:
+            return None
+
     def expression(self) -> ex.Expr:
         return self.equality()
 
@@ -136,7 +142,26 @@ class Parser:
         ErrorHandler.error(token, msg)
         return ParseError()
 
-    # TODO: 6.3 Syntax Errors
+    def synchronize(self):
+        self.advance()
+
+        while not self.is_at_end():
+            if self.previous().type == TokenType.SEMICOLON:
+                return
+
+            if self.peek().type in (
+                TokenType.CLASS,
+                TokenType.FUN,
+                TokenType.VAR,
+                TokenType.FOR,
+                TokenType.IF,
+                TokenType.WHILE,
+                TokenType.PRINT,
+                TokenType.RETURN,
+            ):
+                return
+
+            self.advance()
 
 
 class ParseError(RuntimeError):

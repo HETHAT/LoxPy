@@ -1,6 +1,1 @@
-// this is a comment
-(( )){} // grouping stuff
-!*+-/=<> <= == // operators
-while hi and hello
-true false nil
-"string" 69.7
+(25 - 1) + 1 / -3

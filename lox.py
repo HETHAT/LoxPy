@@ -1,6 +1,8 @@
 import pathlib
 import sys
+from parser import Parser
 
+from ast_printer import AstPrinter
 from error_handler import ErrorHandler
 from scanner import Scanner
 
@@ -8,9 +10,14 @@ from scanner import Scanner
 def run(content: str) -> None:
     scanner = Scanner(content)
     tokens = scanner.scan_tokens()
+    parser = Parser(tokens)
+    expression = parser.parse()
 
-    for token in tokens:
-        print(token)
+    # Stop if there was a syntax error.
+    if ErrorHandler.had_error:
+        return
+
+    print(AstPrinter().print(expression))  # pyright: ignore
 
 
 def run_file(path: pathlib.Path) -> None:
