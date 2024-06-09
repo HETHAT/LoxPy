@@ -5,7 +5,7 @@ class AstPrinter(ex.Visitor[str]):
     def print(self, expr: ex.Expr):
         return expr.accept(self)
 
-    def _parenthesize(self, name: str, *exprs: ex.Expr):
+    def parenthesize(self, name: str, *exprs: ex.Expr):
         builder = "(" + name
         for expr in exprs:
             builder += " " + expr.accept(self)
@@ -13,16 +13,16 @@ class AstPrinter(ex.Visitor[str]):
         return builder
 
     def visit_binary_expr(self, expr: ex.Binary):
-        return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
+        return self.parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
     def visit_grouping_expr(self, expr: ex.Grouping):
-        return self._parenthesize("group", expr.expression)
+        return self.parenthesize("group", expr.expression)
 
     def visit_unary_expr(self, expr: ex.Unary):
-        return self._parenthesize(expr.operator.lexeme, expr.right)
+        return self.parenthesize(expr.operator.lexeme, expr.right)
 
     def visit_literal_expr(self, expr: ex.Literal):
-        return self._parenthesize(str(expr.value))
+        return self.parenthesize(str(expr.value))
 
 
 if __name__ == "__main__":

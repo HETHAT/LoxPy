@@ -17,7 +17,7 @@ from token_type import TokenType
 class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
-        self._cur = 0
+        self.cur = 0
 
     def expression(self) -> ex.Expr:
         return self.equality()
@@ -25,8 +25,8 @@ class Parser:
     def equality(self) -> ex.Expr:
         expr = self.comparison()
 
-        while self._match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
-            op = self._previous()
+        while self.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
+            op = self.previous()
             right = self.comparison()
             expr = ex.Binary(expr, op, right)
 
@@ -35,13 +35,13 @@ class Parser:
     def comparison(self) -> ex.Expr:
         expr = self.term()
 
-        while self._match(
+        while self.match(
             TokenType.LESS,
             TokenType.LESS_EQUAL,
             TokenType.GREATER,
             TokenType.GREATER_EQUAL,
         ):
-            op = self._previous()
+            op = self.previous()
             right = self.term()
             expr = ex.Binary(expr, op, right)
 
@@ -50,11 +50,11 @@ class Parser:
     def term(self) -> ex.Expr:
         expr = self.factor()
 
-        while self._match(
+        while self.match(
             TokenType.PLUS,
             TokenType.MINUS,
         ):
-            op = self._previous()
+            op = self.previous()
             right = self.factor()
             expr = ex.Binary(expr, op, right)
 
@@ -63,79 +63,79 @@ class Parser:
     def factor(self) -> ex.Expr:
         expr = self.unary()
 
-        while self._match(
+        while self.match(
             TokenType.STAR,
             TokenType.SLASH,
         ):
-            op = self._previous()
+            op = self.previous()
             right = self.unary()
             expr = ex.Binary(expr, op, right)
 
         return expr
 
     def unary(self) -> ex.Expr:
-        if self._match(TokenType.BANG, TokenType.MINUS):
-            op = self._previous()
+        if self.match(TokenType.BANG, TokenType.MINUS):
+            op = self.previous()
             right = self.unary()
             return ex.Unary(op, right)
 
         return self.primary()
 
     def primary(self) -> ex.Expr:
-        if self._match(
+        if self.match(
             TokenType.FALSE,
             TokenType.TRUE,
             TokenType.NIL,
             TokenType.STRING,
             TokenType.NUMBER,
         ):
-            return ex.Literal(self._previous().literal)
+            return ex.Literal(self.previous().literal)
 
-        if self._match(TokenType.LEFT_PAREN):
+        if self.match(TokenType.LEFT_PAREN):
             expr = self.expression()
-            self._consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
+            self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return ex.Grouping(expr)
 
-        raise self._error(self._peek(), "Expected expression")
+        raise self.error(self.peek(), "Expected expression")
 
-    def _consume(self, type: TokenType, msg: str):
-        if self._check(type):
-            return self._advance()
+    def consume(self, type: TokenType, msg: str):
+        if self.check(type):
+            return self.advance()
 
-        raise self._error(self._peek(), msg)
+        raise self.error(self.peek(), msg)
 
-    def _advance(self) -> Token:
-        if not self._is_at_end():
-            self._cur += 1
-        return self._previous()
+    def advance(self) -> Token:
+        if not self.is_at_end():
+            self.cur += 1
+        return self.previous()
 
-    def _previous(self) -> Token:
-        return self.tokens[self._cur - 1]
+    def previous(self) -> Token:
+        return self.tokens[self.cur - 1]
 
-    def _match(self, *types: TokenType) -> bool:
+    def match(self, *types: TokenType) -> bool:
         for type in types:
-            if self._check(type):
-                self._advance()
+            if self.check(type):
+                self.advance()
                 return True
 
         return False
 
-    def _check(self, type: TokenType) -> bool:
-        if self._is_at_end():
+    def check(self, type: TokenType) -> bool:
+        if self.is_at_end():
             return False
 
-        return self._peek().type == type
+        return self.peek().type == type
 
-    def _peek(self) -> Token:
-        return self.tokens[self._cur]
+    def peek(self) -> Token:
+        return self.tokens[self.cur]
 
-    def _is_at_end(self) -> bool:
-        return self._cur >= len(self.tokens)
+    def is_at_end(self) -> bool:
+        return self.cur >= len(self.tokens)
 
-    def _error(self, token: Token, msg: str):
+    def error(self, token: Token, msg: str):
         ErrorHandler.error(token, msg)
         return ParseError()
-    
+
     # TODO: 6.3 Syntax Errors
 
 
