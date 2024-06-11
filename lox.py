@@ -2,9 +2,11 @@ import pathlib
 import sys
 from parser import Parser
 
-from ast_printer import AstPrinter
 from error_handler import ErrorHandler
+from interpreter import Interpreter
 from scanner import Scanner
+
+interpreter = Interpreter()
 
 
 def run(content: str) -> None:
@@ -17,7 +19,7 @@ def run(content: str) -> None:
     if ErrorHandler.had_error:
         return
 
-    print(AstPrinter().print(expression))  # pyright: ignore
+    interpreter.interpret(expression)  # pyright: ignore
 
 
 def run_file(path: pathlib.Path) -> None:
@@ -26,6 +28,9 @@ def run_file(path: pathlib.Path) -> None:
 
     if ErrorHandler.had_error:
         exit(65)
+
+    if ErrorHandler.had_runtime_error:
+        exit(70)
 
 
 def run_prompt() -> None:

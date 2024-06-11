@@ -1,5 +1,5 @@
 import expr as ex
-from error_handler import ErrorHandler
+from error_handler import ErrorHandler, ParseErr
 from token_ import Token
 from token_type import TokenType
 
@@ -22,7 +22,7 @@ class Parser:
     def parse(self):
         try:
             return self.expression()
-        except ParseError:
+        except ParseErr:
             return None
 
     def expression(self) -> ex.Expr:
@@ -140,7 +140,7 @@ class Parser:
 
     def error(self, token: Token, msg: str):
         ErrorHandler.error(token, msg)
-        return ParseError()
+        return ParseErr()
 
     def synchronize(self):
         self.advance()
@@ -162,7 +162,3 @@ class Parser:
                 return
 
             self.advance()
-
-
-class ParseError(RuntimeError):
-    pass
