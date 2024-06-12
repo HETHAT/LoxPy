@@ -35,4 +35,4 @@ if __name__ == "__main__":
         ex.Grouping(ex.Literal(456)),
     )
 
-    print(AstPrinter().print(expression))
+    print(AstPrinter().print(expression))  # pyright: ignore

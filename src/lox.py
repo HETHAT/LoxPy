@@ -13,13 +13,13 @@ def run(content: str) -> None:
     scanner = Scanner(content)
     tokens = scanner.scan_tokens()
     parser = Parser(tokens)
-    expression = parser.parse()
+    statements = parser.parse()
 
     # Stop if there was a syntax error.
     if ErrorHandler.had_error:
         return
 
-    interpreter.interpret(expression)  # pyright: ignore
+    interpreter.interpret(statements)
 
 
 def run_file(path: pathlib.Path) -> None:

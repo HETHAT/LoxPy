@@ -1,17 +1,8 @@
 import expr as ex
+import stmt as st
 from error_handler import ErrorHandler, ParseErr
 from token_ import Token
 from token_type import TokenType
-
-# expression     → equality ;
-# equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-# comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-# term           → factor ( ( "-" | "+" ) factor )* ;
-# factor         → unary ( ( "/" | "*" ) unary )* ;
-# unary          → ( "!" | "-" ) unary
-#                | primary ;
-# primary        → NUMBER | STRING | "true" | "false" | "nil"
-#                | "(" expression ")" ;
 
 
 class Parser:
@@ -19,14 +10,62 @@ class Parser:
         self.tokens = tokens
         self.cur = 0
 
-    def parse(self):
+    def parse(self) -> list[st.Stmt]:
+        statements = []
+        while not self.is_at_end():
+            statements.append(self.declaration())
+        return statements
+
+    def declaration(self):
         try:
-            return self.expression()
+            if self.match(TokenType.VAR):
+                return self.var_declaration()
+            return self.statement()
         except ParseErr:
+            self.synchronize()
             return None
 
+    def statement(self):
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+        return self.expression_statement()
+
+    def print_statement(self):
+        val = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ; after value")
+        return st.Print(val)
+
+    def var_declaration(self):
+        name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
+        initializer = None
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+        self.consume(
+            TokenType.SEMICOLON, "Expect ';' after variable declaration."
+        )
+        return st.Var(name, initializer)
+
+    def expression_statement(self):
+        val = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ; after expression")
+        return st.Expression(val)
+
     def expression(self) -> ex.Expr:
-        return self.equality()
+        return self.assignment()
+
+    def assignment(self):
+        expr = self.equality()
+
+        if self.match(TokenType.EQUAL):
+            equal = self.previous()
+            val = self.assignment()
+
+            if isinstance(expr, ex.Variable):
+                return ex.Assign(expr.name, val)
+
+            self.error(equal, "Invalid assignment target.")
+
+        return expr
 
     def equality(self) -> ex.Expr:
         expr = self.comparison()
@@ -97,10 +136,13 @@ class Parser:
         ):
             return ex.Literal(self.previous().literal)
 
-        if self.match(TokenType.LEFT_PAREN):
+        elif self.match(TokenType.LEFT_PAREN):
             expr = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return ex.Grouping(expr)
+
+        elif self.match(TokenType.IDENTIFIER):
+            return ex.Variable(self.previous())
 
         raise self.error(self.peek(), "Expected expression")
 
@@ -136,7 +178,7 @@ class Parser:
         return self.tokens[self.cur]
 
     def is_at_end(self) -> bool:
-        return self.cur >= len(self.tokens)
+        return self.peek().type == TokenType.EOF
 
     def error(self, token: Token, msg: str):
         ErrorHandler.error(token, msg)

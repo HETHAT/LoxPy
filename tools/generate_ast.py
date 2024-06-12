@@ -12,10 +12,12 @@ def main(args):
         output_dir,
         "Expr",
         [
+            "Assign | name: Token, value: Expr",
             "Binary | left: Expr, operator: Token, right: Expr",
             "Grouping | expression: Expr",
             "Literal | value",
             "Unary | operator: Token, right: Expr",
+            "Variable | name: Token",
         ],
         ["from token_ import Token"],
     )
@@ -26,10 +28,9 @@ def main(args):
         [
             "Expression | expression: Expr",
             "Print | expression: Expr",
+            "Var | name: Token, initializer: Expr | None",
         ],
-        [
-            "from expr import Expr",
-        ],
+        ["from expr import Expr", "from token_ import Token"],
     )
 
 
@@ -43,8 +44,8 @@ def define_ast(output_dir, base_name, types, extra_imports=None):
 
     # the AST classes
     for type in types:
-        class_name = type.split("|")[0].strip()
-        fields = type.split("|")[1].strip()
+        class_name = type.split("|", 1)[0].strip()
+        fields = type.split("|", 1)[1].strip()
         define_type(output_file, base_name, class_name, fields)
 
     output_file.close()
