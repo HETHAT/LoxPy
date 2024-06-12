@@ -16,11 +16,24 @@ class Interpreter(ex.Visitor, st.Visitor):
         except RuntimeErr as error:
             ErrorHandler.runtime_error(error)
 
+    def evaluate(self, expr: ex.Expr):
+        return expr.accept(self)
+
     def execute(self, stmt: st.Stmt):
         stmt.accept(self)
 
-    def evaluate(self, expr: ex.Expr):
-        return expr.accept(self)
+    def execute_block(self, statements, environment):
+        previous = self.env
+        try:
+            self.env = environment
+            for stmt in statements:
+                self.execute(stmt)
+        finally:
+            self.env = previous
+
+    def visit_block_stmt(self, stmt: st.Block):
+        self.execute_block(stmt.statements, Environment(self.env))
+        return None
 
     def visit_expression_stmt(self, stmt: st.Expression):
         self.evaluate(stmt.expression)

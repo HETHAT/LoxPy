@@ -26,6 +26,7 @@ def main(args):
         output_dir,
         "Stmt",
         [
+            "Block | statements: list[Stmt]",
             "Expression | expression: Expr",
             "Print | expression: Expr",
             "Var | name: Token, initializer: Expr | None",

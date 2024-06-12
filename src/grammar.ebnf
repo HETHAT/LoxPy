@@ -1,11 +1,14 @@
 program        → statement* EOF ;
 
+statement      → exprStmt
+               | printStmt
+               | block ;
+
+block          → "{" declaration* "}" ;
 declaration    → varDecl
                | statement ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
-statement      → exprStmt
-               | printStmt ;
 
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
