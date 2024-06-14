@@ -98,6 +98,14 @@ class Interpreter(ex.Visitor, st.Visitor):
     def visit_literal_expr(self, expr: ex.Literal):
         return expr.value
 
+    def visit_logical_expr(self, expr: ex.Logical):
+        left = self.evaluate(expr.left)
+
+        if (expr.operator.type == TokenType.AND) ^ self.truthy(left):
+            return left
+
+        return self.evaluate(expr.right)
+
     def visit_unary_expr(self, expr: ex.Unary):
         right = self.evaluate(expr.right)
 

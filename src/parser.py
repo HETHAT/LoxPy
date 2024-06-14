@@ -65,7 +65,7 @@ class Parser:
         return self.assignment()
 
     def assignment(self):
-        expr = self.equality()
+        expr = self.logic_or()
 
         if self.match(TokenType.EQUAL):
             equal = self.previous()
@@ -75,6 +75,26 @@ class Parser:
                 return ex.Assign(expr.name, val)
 
             self.error(equal, "Invalid assignment target.")
+
+        return expr
+
+    def logic_or(self):
+        expr = self.logic_and()
+
+        while self.match(TokenType.OR):
+            op = self.previous()
+            right = self.logic_and()
+            expr = ex.Logical(expr, op, right)
+
+        return expr
+
+    def logic_and(self):
+        expr = self.equality()
+
+        while self.match(TokenType.OR):
+            op = self.previous()
+            right = self.equality()
+            expr = ex.Logical(expr, op, right)
 
         return expr
 
