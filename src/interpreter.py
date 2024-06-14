@@ -60,6 +60,11 @@ class Interpreter(ex.Visitor, st.Visitor):
         self.env.define(stmt.name.lexeme, val)
         return None
 
+    def visit_while_stmt(self, stmt: st.While):
+        while self.truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.body)
+        return None
+
     def visit_assign_expr(self, expr: ex.Assign):
         val = self.evaluate(expr.value)
         self.env.assign(expr.name, val)
@@ -136,7 +141,11 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     @staticmethod
     def stringfy(val):
-        return "nil" if val is None else str(val)
+        if val is None:
+            return "nil"
+        if isinstance(val, float) and val.is_integer():
+            return str(int(val))
+        return str(val)
 
     @staticmethod
     def check_number_op(operator, operand):

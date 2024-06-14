@@ -26,13 +26,47 @@ class Parser:
             return None
 
     def statement(self):
+        if self.match(TokenType.FOR):
+            return self.for_statement()
         if self.match(TokenType.IF):
             return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
         if self.match(TokenType.LEFT_BRACE):
             return st.Block(self.block())
         return self.expression_statement()
+
+    def for_statement(self):
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+
+        if self.match(TokenType.SEMICOLON):
+            init = None
+        elif self.match(TokenType.VAR):
+            init = self.var_declaration()
+        else:
+            init = self.expression_statement()
+
+        cond = ex.Literal(True)
+        if not self.check(TokenType.SEMICOLON):
+            cond = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+        increment = None
+        if not self.check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clause.")
+
+        body = self.statement()
+        if increment is not None:
+            body = st.Block([body, st.Expression(increment)])
+        body = st.While(cond, body)
+
+        if init is not None:
+            body = st.Block([init, body])
+
+        return body
 
     def if_statement(self):
         self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
@@ -58,6 +92,12 @@ class Parser:
             initializer = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return st.Var(name, initializer)
+
+    def while_statement(self):
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after while condition.")
+        return st.While(condition, self.statement())
 
     def expression_statement(self):
         val = self.expression()
