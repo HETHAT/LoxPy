@@ -14,6 +14,7 @@ def main(args):
         [
             "Assign | name: Token, value: Expr",
             "Binary | left: Expr, operator: Token, right: Expr",
+            "Call | callee: Expr, paren: Token, args: list[Expr]",
             "Grouping | expression: Expr",
             "Literal | value",
             "Logical | left: Expr, operator: Token, right: Expr",
@@ -29,8 +30,10 @@ def main(args):
         [
             "Block | statements: list[Stmt]",
             "Expression | expression: Expr",
+            "Function | name: Token, params: list[Token], body: list[Stmt]",
             "If | condition: Expr, then_branch: Stmt, else_branch: Stmt | None",
             "Print | expression: Expr",
+            "Return | keyword: Token, expression: Expr | None",
             "Var | name: Token, initializer: Expr | None",
             "While | condition: Expr, body: Stmt",
         ],

@@ -1,13 +1,18 @@
 import expr as ex
+import native_functions
 import stmt as st
 from environment import Environment
-from error_handler import ErrorHandler, RuntimeErr
+from error_handler import ErrorHandler, Return, RuntimeErr
+from lox_function import LoxFunction
 from token_type import TokenType
 
 
 class Interpreter(ex.Visitor, st.Visitor):
+    globals_ = Environment()
+
     def __init__(self) -> None:
-        self.env = Environment()
+        self.env = self.globals_
+        self.globals_.define("clock", native_functions.Clock())
 
     def interpret(self, statements: list[st.Stmt]):
         try:
@@ -39,6 +44,11 @@ class Interpreter(ex.Visitor, st.Visitor):
         self.evaluate(stmt.expression)
         return None
 
+    def visit_function_stmt(self, stmt: st.Function):
+        func = LoxFunction(stmt, self.env)
+        self.env.define(stmt.name.lexeme, func)
+        return None
+
     def visit_if_stmt(self, stmt: st.If):
         condition = self.evaluate(stmt.condition)
 
@@ -51,6 +61,13 @@ class Interpreter(ex.Visitor, st.Visitor):
     def visit_print_stmt(self, stmt: st.Print):
         print(self.stringfy(self.evaluate(stmt.expression)))
         return None
+
+    def visit_return_stmt(self, stmt: st.Return):
+        val = None
+        if stmt.expression is not None:
+            val = self.evaluate(stmt.expression)
+
+        raise Return(val)
 
     def visit_var_stmt(self, stmt: st.Var):
         val = None
@@ -105,6 +122,15 @@ class Interpreter(ex.Visitor, st.Visitor):
                 return left != right
 
         return None  # Unreachable
+
+    def visit_call_expr(self, expr: ex.Call):
+        callee = self.evaluate(expr.callee)
+        args = [self.evaluate(arg) for arg in expr.args]
+        if len(args) != callee.arity():
+            raise RuntimeErr(
+                f"Expected {callee.arity()} arguments got {len(args)}.", token=expr.paren
+            )
+        return callee.call(self, args)
 
     def visit_grouping_expr(self, expr: ex.Grouping):
         return self.evaluate(expr.expression)

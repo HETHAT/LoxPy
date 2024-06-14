@@ -33,6 +33,11 @@ class ParseErr(RuntimeError):
     pass
 
 
+class Return(RuntimeError):
+    def __init__(self, val) -> None:
+        self.val = val
+
+
 class RuntimeErr(RuntimeError):
     def __init__(self, *args: object, token) -> None:
         super().__init__(*args)

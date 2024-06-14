@@ -1,12 +1,16 @@
+from typing import TYPE_CHECKING
+
 import expr as ex
 import stmt as st
 from error_handler import ErrorHandler, ParseErr
-from token_ import Token
 from token_type import TokenType
+
+if TYPE_CHECKING:
+    from token_ import Token
 
 
 class Parser:
-    def __init__(self, tokens: list[Token]) -> None:
+    def __init__(self, tokens: list["Token"]) -> None:
         self.tokens = tokens
         self.cur = 0
 
@@ -18,6 +22,8 @@ class Parser:
 
     def declaration(self):
         try:
+            if self.match(TokenType.FUN):
+                return self.function("function")
             if self.match(TokenType.VAR):
                 return self.var_declaration()
             return self.statement()
@@ -32,6 +38,8 @@ class Parser:
             return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        if self.match(TokenType.RETURN):
+            return self.return_statement()
         if self.match(TokenType.WHILE):
             return self.while_statement()
         if self.match(TokenType.LEFT_BRACE):
@@ -68,6 +76,28 @@ class Parser:
 
         return body
 
+    def function(self, kind: str):
+        name = self.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.")
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.")
+
+        params = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            params.append(self.consume(TokenType.IDENTIFIER, "Expect parameter name."))
+            while self.match(TokenType.COMMA):
+                params.append(
+                    self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                )
+
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+
+        if len(params) >= 255:
+            self.error(self.peek(), "Can't have more than 255 parameters.")
+
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.")
+        body = self.block()  # block() assumes { has already been matched
+
+        return st.Function(name, params, body)
+
     def if_statement(self):
         self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
         condition = self.expression()
@@ -84,6 +114,15 @@ class Parser:
         val = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ; after value")
         return st.Print(val)
+
+    def return_statement(self):
+        keyword = self.previous()
+        val = None
+        if not self.check(TokenType.SEMICOLON):
+            val = self.expression()
+
+        self.consume(TokenType.SEMICOLON, "Expect ; after return value.")
+        return st.Return(keyword, val)
 
     def var_declaration(self):
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
@@ -207,7 +246,33 @@ class Parser:
             right = self.unary()
             return ex.Unary(op, right)
 
-        return self.primary()
+        return self.call()
+
+    def call(self):
+        expr = self.primary()
+
+        while True:  # NOTE: This will make sense later
+            if self.match(TokenType.LEFT_PAREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+
+        return expr
+
+    def finish_call(self, callee):
+        args = []
+
+        if not self.check(TokenType.RIGHT_PAREN):
+            args.append(self.expression())
+            while self.match(TokenType.COMMA):
+                args.append(self.expression())
+
+        paren = self.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+
+        if len(args) >= 255:  # NOTE: Needed in part 3
+            self.error(self.peek(), "Can't have more than 255 arguments.")
+
+        return ex.Call(callee, paren, args)
 
     def primary(self) -> ex.Expr:
         if self.match(
@@ -235,12 +300,12 @@ class Parser:
 
         raise self.error(self.peek(), msg)
 
-    def advance(self) -> Token:
+    def advance(self) -> "Token":
         if not self.is_at_end():
             self.cur += 1
         return self.previous()
 
-    def previous(self) -> Token:
+    def previous(self) -> "Token":
         return self.tokens[self.cur - 1]
 
     def match(self, *types: TokenType) -> bool:
@@ -257,13 +322,13 @@ class Parser:
 
         return self.peek().type == type
 
-    def peek(self) -> Token:
+    def peek(self) -> "Token":
         return self.tokens[self.cur]
 
     def is_at_end(self) -> bool:
         return self.peek().type == TokenType.EOF
 
-    def error(self, token: Token, msg: str):
+    def error(self, token: "Token", msg: str):
         ErrorHandler.error(token, msg)
         return ParseErr()
 
