@@ -39,6 +39,15 @@ class Interpreter(ex.Visitor, st.Visitor):
         self.evaluate(stmt.expression)
         return None
 
+    def visit_if_stmt(self, stmt: st.If):
+        condition = self.evaluate(stmt.condition)
+
+        if self.truthy(condition):
+            self.execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.execute(stmt.else_branch)
+        return None
+
     def visit_print_stmt(self, stmt: st.Print):
         print(self.stringfy(self.evaluate(stmt.expression)))
         return None
@@ -147,6 +156,4 @@ class Interpreter(ex.Visitor, st.Visitor):
             return
         if isinstance(left, str) and isinstance(right, str):
             return
-        raise RuntimeErr(
-            "Operands must be two numbers or two strings.", token=operator
-        )
+        raise RuntimeErr("Operands must be two numbers or two strings.", token=operator)

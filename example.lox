@@ -1,2 +1,8 @@
-print "hi" or 2; // "hi".
-print nil or "yes"; // "yes".
+var a = -1;
+if (a > 2) print "a is bigger than 2";
+else
+    if (a > 0) print "a is positive";
+    else {
+        a = -a;
+        print a;
+    }
