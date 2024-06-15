@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from environment import Environment
@@ -7,6 +8,8 @@ from lox_callable import Callable
 if TYPE_CHECKING:
     import interpreter
     import stmt
+
+FunctionType = Enum("FunctionType", "NONE, FUNCTION")
 
 
 class LoxFunction(Callable):

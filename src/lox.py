@@ -4,6 +4,7 @@ from parser import Parser
 
 from error_handler import ErrorHandler
 from interpreter import Interpreter
+from resolver import Resolver
 from scanner import Scanner
 
 interpreter = Interpreter()
@@ -16,6 +17,13 @@ def run(content: str) -> None:
     statements = parser.parse()
 
     # Stop if there was a syntax error.
+    if ErrorHandler.had_error:
+        return
+
+    # TODO: check if there is problem between env and global
+    resolver = Resolver(interpreter)
+    resolver.resolve_stmts(statements)
+
     if ErrorHandler.had_error:
         return
 

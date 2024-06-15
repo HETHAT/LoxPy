@@ -13,6 +13,7 @@ class Interpreter(ex.Visitor, st.Visitor):
     def __init__(self) -> None:
         self.env = self.globals_
         self.globals_.define("clock", native_functions.Clock())
+        self.locals = {}
 
     def interpret(self, statements: list[st.Stmt]):
         try:
@@ -26,6 +27,9 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     def execute(self, stmt: st.Stmt):
         stmt.accept(self)
+
+    def resolve(self, expr: ex.Expr, depth: int):
+        self.locals[expr] = depth
 
     def execute_block(self, statements, environment):
         previous = self.env
@@ -64,8 +68,8 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     def visit_return_stmt(self, stmt: st.Return):
         val = None
-        if stmt.expression is not None:
-            val = self.evaluate(stmt.expression)
+        if stmt.val is not None:
+            val = self.evaluate(stmt.val)
 
         raise Return(val)
 
@@ -84,7 +88,12 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     def visit_assign_expr(self, expr: ex.Assign):
         val = self.evaluate(expr.value)
-        self.env.assign(expr.name, val)
+        distance = self.locals.get(expr)
+        if distance is not None:
+            self.env.assign_at(distance, expr.name, val)
+        else:
+            self.globals_.assign(expr.name, val)
+
         return val
 
     def visit_binary_expr(self, expr: ex.Binary):
@@ -159,7 +168,14 @@ class Interpreter(ex.Visitor, st.Visitor):
         return None  # Unreachable
 
     def visit_variable_expr(self, expr: ex.Variable):
-        return self.env.get(expr.name)
+        return self.lookup_variable(expr.name, expr)
+
+    def lookup_variable(self, name, expr: ex.Expr):
+        distance = self.locals.get(expr)
+        if distance is not None:
+            return self.env.get_at(distance, name.lexeme)
+        else:
+            return self.globals_.get(name)
 
     @staticmethod
     def truthy(val):

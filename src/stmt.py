@@ -92,9 +92,9 @@ class Print(Stmt):
 
 
 class Return(Stmt):
-    def __init__(self, keyword: Token, expression: Expr | None):
+    def __init__(self, keyword: Token, val: Expr | None):
         self.keyword: Token = keyword
-        self.expression: Expr | None = expression
+        self.val: Expr | None = val
 
     def accept(self, visitor: Visitor):
         return visitor.visit_return_stmt(self)
