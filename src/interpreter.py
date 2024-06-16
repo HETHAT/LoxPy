@@ -3,7 +3,9 @@ import native_functions
 import stmt as st
 from environment import Environment
 from error_handler import ErrorHandler, Return, RuntimeErr
+from lox_class import LoxClass
 from lox_function import LoxFunction
+from lox_instance import LoxInstance
 from token_type import TokenType
 
 
@@ -42,6 +44,17 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     def visit_block_stmt(self, stmt: st.Block):
         self.execute_block(stmt.statements, Environment(self.env))
+        return None
+
+    def visit_class_stmt(self, stmt: st.Class):
+        self.env.define(stmt.name.lexeme, None)
+        methods = {}
+        for method in stmt.methods:
+            name = method.name.lexeme
+            methods[name] = LoxFunction(method, self.env, name == "init")
+
+        klass = LoxClass(stmt.name.lexeme, methods)
+        self.env.assign(stmt.name, klass)
         return None
 
     def visit_expression_stmt(self, stmt: st.Expression):
@@ -141,11 +154,31 @@ class Interpreter(ex.Visitor, st.Visitor):
             )
         return callee.call(self, args)
 
+    def visit_get_expr(self, expr: ex.Get):
+        obj = self.evaluate(expr.obj)
+        if isinstance(obj, LoxInstance):
+            return obj.get(expr.name)
+
+        raise RuntimeErr("Only instances have properties.", token=expr.name)
+
     def visit_grouping_expr(self, expr: ex.Grouping):
         return self.evaluate(expr.expression)
 
     def visit_literal_expr(self, expr: ex.Literal):
         return expr.value
+
+    def visit_set_expr(self, expr: ex.Set):
+        obj = self.evaluate(expr.obj)
+
+        if not isinstance(obj, LoxInstance):
+            raise RuntimeErr("Only instances have properties.", token=expr.name)
+
+        val = self.evaluate(expr.value)
+        obj.set(expr.name, val)
+        return val
+
+    def visit_this_expr(self, expr: ex.This):
+        return self.lookup_variable(expr.keyword, expr)
 
     def visit_logical_expr(self, expr: ex.Logical):
         left = self.evaluate(expr.left)

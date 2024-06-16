@@ -13,6 +13,10 @@ class Visitor(ABC, Generic[V]):
         ...
 
     @abstractmethod
+    def visit_class_stmt(self, stmt: "Class") -> V:
+        ...
+
+    @abstractmethod
     def visit_expression_stmt(self, stmt: "Expression") -> V:
         ...
 
@@ -53,6 +57,15 @@ class Block(Stmt):
 
     def accept(self, visitor: Visitor):
         return visitor.visit_block_stmt(self)
+
+
+class Class(Stmt):
+    def __init__(self, name: Token, methods: list["Function"]):
+        self.name: Token = name
+        self.methods: list["Function"] = methods
+
+    def accept(self, visitor: Visitor):
+        return visitor.visit_class_stmt(self)
 
 
 class Expression(Stmt):

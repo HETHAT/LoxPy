@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import expr as ex
 import stmt as st
 from error_handler import ErrorHandler
+from lox_class import ClassType
 from lox_function import FunctionType
 
 if TYPE_CHECKING:
@@ -15,6 +16,7 @@ class Resolver(ex.Visitor, st.Visitor):
         self.interpreter = interpreter
         self.scopes: list[dict[str, bool]] = []
         self.current_function = FunctionType.NONE
+        self.current_class = ClassType.NONE
 
     def resolve_expr(self, expr: ex.Expr):
         return expr.accept(self)
@@ -69,6 +71,26 @@ class Resolver(ex.Visitor, st.Visitor):
         self.resolve_stmts(stmt.statements)
         self.end_scope()
 
+    def visit_class_stmt(self, stmt: st.Class):
+        enclosing_class = self.current_class
+        self.current_class = ClassType.CLASS
+
+        self.declare(stmt.name)
+        self.define(stmt.name)
+
+        self.begin_scope()
+        self.scopes[-1]["this"] = True
+
+        for method in stmt.methods:
+            type = FunctionType.METHOD
+            if method.name.lexeme == "init":
+                type = FunctionType.INITIALIZER
+
+            self.resolve_function(method, type)
+
+        self.end_scope()
+        self.current_class = enclosing_class
+
     def visit_expression_stmt(self, stmt: st.Expression):
         self.resolve_expr(stmt.expression)
 
@@ -89,6 +111,9 @@ class Resolver(ex.Visitor, st.Visitor):
     def visit_return_stmt(self, stmt: st.Return):
         if self.current_function == FunctionType.NONE:
             ErrorHandler.error(stmt.keyword, "Can't return from top-level code.")
+
+        if self.current_function == FunctionType.INITIALIZER and stmt.val is not None:
+            ErrorHandler.error(stmt.keyword, "Can't return a value from an initializer.")
 
         if stmt.val is not None:
             self.resolve_expr(stmt.val)
@@ -118,6 +143,9 @@ class Resolver(ex.Visitor, st.Visitor):
         for arg in expr.args:
             self.resolve_expr(arg)
 
+    def visit_get_expr(self, expr: ex.Get):
+        self.resolve_expr(expr.obj)
+
     def visit_grouping_expr(self, expr: ex.Grouping):
         self.resolve_expr(expr.expression)
 
@@ -127,6 +155,17 @@ class Resolver(ex.Visitor, st.Visitor):
     def visit_logical_expr(self, expr: ex.Logical):
         self.resolve_expr(expr.left)
         self.resolve_expr(expr.right)
+
+    def visit_set_expr(self, expr: ex.Set):
+        self.resolve_expr(expr.value)
+        self.resolve_expr(expr.obj)
+
+    def visit_this_expr(self, expr: ex.This):
+        if self.current_class == ClassType.NONE:
+            ErrorHandler.error(expr.keyword, "Can't use 'this' outside of a class.")
+            return
+
+        self.resolve_local(expr, expr.keyword)
 
     def visit_unary_expr(self, expr: ex.Unary):
         self.resolve_expr(expr.right)

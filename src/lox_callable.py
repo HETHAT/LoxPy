@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     import interpreter
 
 
-class Callable(ABC):
+class LoxCallable(ABC):
     @abstractmethod
     def arity(self) -> int:
         ...

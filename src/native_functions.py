@@ -1,9 +1,9 @@
 import time
 
-from lox_callable import Callable
+from lox_callable import LoxCallable
 
 
-class Clock(Callable):
+class Clock(LoxCallable):
     def arity(self):
         return 0
 
