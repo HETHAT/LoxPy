@@ -15,7 +15,10 @@ FunctionType = Enum("FunctionType", "NONE, FUNCTION, INITIALIZER, METHOD")
 
 class LoxFunction(LoxCallable):
     def __init__(
-        self, declaration: "stmt.Function", closure: Environment, is_init: bool = False
+        self,
+        declaration: "stmt.Function",
+        closure: Environment,
+        is_init: bool = False,
     ) -> None:
         self.declaration = declaration
         self.closure = closure
@@ -29,7 +32,9 @@ class LoxFunction(LoxCallable):
         env.define("this", instance)
         return LoxFunction(self.declaration, env, self.is_init)
 
-    def call(self, interpreter: "interpreter.Interpreter", args: list) -> object:
+    def call(
+        self, interpreter: "interpreter.Interpreter", args: list
+    ) -> object:
         env = Environment(self.closure)
         for param, arg in zip(self.declaration.params, args):
             env.define(param.lexeme, arg)

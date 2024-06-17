@@ -11,5 +11,7 @@ class LoxCallable(ABC):
         ...
 
     @abstractmethod
-    def call(self, interpreter: "interpreter.Interpreter", args: list) -> object:
+    def call(
+        self, interpreter: "interpreter.Interpreter", args: list
+    ) -> object:
         ...

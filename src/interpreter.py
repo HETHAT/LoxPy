@@ -15,7 +15,7 @@ class Interpreter(ex.Visitor, st.Visitor):
     def __init__(self) -> None:
         self.env = self.globals_
         self.globals_.define("clock", native_functions.Clock())
-        self.locals = {}
+        self.locals: dict[ex.Expr, int] = {}
 
     def interpret(self, statements: list[st.Stmt]):
         try:
@@ -47,13 +47,29 @@ class Interpreter(ex.Visitor, st.Visitor):
         return None
 
     def visit_class_stmt(self, stmt: st.Class):
+        superclass = None
+        if stmt.superclass is not None:
+            superclass = self.evaluate(stmt.superclass)
+            if not isinstance(superclass, LoxClass):
+                raise RuntimeErr(
+                    "Superclass must be a class", token=stmt.superclass.name
+                )
+
         self.env.define(stmt.name.lexeme, None)
+
+        if superclass is not None:
+            self.env = Environment(self.env)
+            self.env.define("super", superclass)
+
         methods = {}
         for method in stmt.methods:
             name = method.name.lexeme
             methods[name] = LoxFunction(method, self.env, name == "init")
 
-        klass = LoxClass(stmt.name.lexeme, methods)
+        klass = LoxClass(stmt.name.lexeme, superclass, methods)
+        if superclass is not None and self.env.enclosing is not None:
+            self.env = self.env.enclosing
+
         self.env.assign(stmt.name, klass)
         return None
 
@@ -150,7 +166,8 @@ class Interpreter(ex.Visitor, st.Visitor):
         args = [self.evaluate(arg) for arg in expr.args]
         if len(args) != callee.arity():
             raise RuntimeErr(
-                f"Expected {callee.arity()} arguments got {len(args)}.", token=expr.paren
+                f"Expected {callee.arity()} arguments got {len(args)}.",
+                token=expr.paren,
             )
         return callee.call(self, args)
 
@@ -176,6 +193,23 @@ class Interpreter(ex.Visitor, st.Visitor):
         val = self.evaluate(expr.value)
         obj.set(expr.name, val)
         return val
+
+    def visit_super_expr(self, expr: ex.Super):
+        distance = self.locals[expr]
+        superclass = self.env.get_at(distance, "super")
+        obj = self.env.get_at(distance - 1, "this")
+
+        assert isinstance(superclass, LoxClass)
+        assert isinstance(obj, LoxInstance)
+
+        method = superclass.find_method(expr.method.lexeme)
+        if method is None:
+            raise RuntimeErr(
+                "Undefined property '" + expr.method.lexeme + "'.",
+                token=expr.method,
+            )
+
+        return method.bind(obj)
 
     def visit_this_expr(self, expr: ex.This):
         return self.lookup_variable(expr.keyword, expr)
@@ -240,4 +274,6 @@ class Interpreter(ex.Visitor, st.Visitor):
             return
         if isinstance(left, str) and isinstance(right, str):
             return
-        raise RuntimeErr("Operands must be two numbers or two strings.", token=operator)
+        raise RuntimeErr(
+            "Operands must be two numbers or two strings.", token=operator
+        )

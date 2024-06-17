@@ -1,6 +1,9 @@
 [tool.black]
-line-length = 90
+line-length = 80
 
 [tool.isort]
 profile = 'black'
-line_length = 90
+line_length = 80
+
+[tool.pyright]
+pythonVersion = "3.10"

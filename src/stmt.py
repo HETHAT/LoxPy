@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from expr import Expr
+from expr import Expr, Variable
 from token_ import Token
 
 V = TypeVar("V")
@@ -60,8 +60,14 @@ class Block(Stmt):
 
 
 class Class(Stmt):
-    def __init__(self, name: Token, methods: list["Function"]):
+    def __init__(
+        self,
+        name: Token,
+        superclass: Variable | None,
+        methods: list["Function"],
+    ):
         self.name: Token = name
+        self.superclass: Variable | None = superclass
         self.methods: list["Function"] = methods
 
     def accept(self, visitor: Visitor):
@@ -87,7 +93,9 @@ class Function(Stmt):
 
 
 class If(Stmt):
-    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt | None):
+    def __init__(
+        self, condition: Expr, then_branch: Stmt, else_branch: Stmt | None
+    ):
         self.condition: Expr = condition
         self.then_branch: Stmt = then_branch
         self.else_branch: Stmt | None = else_branch

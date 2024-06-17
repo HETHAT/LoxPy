@@ -80,11 +80,15 @@ class Parser:
 
     def function(self, kind: str):
         name = self.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.")
-        self.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.")
+        self.consume(
+            TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name."
+        )
 
         params = []
         if not self.check(TokenType.RIGHT_PAREN):
-            params.append(self.consume(TokenType.IDENTIFIER, "Expect parameter name."))
+            params.append(
+                self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+            )
             while self.match(TokenType.COMMA):
                 params.append(
                     self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
@@ -95,7 +99,9 @@ class Parser:
         if len(params) >= 255:
             self.error(self.peek(), "Can't have more than 255 parameters.")
 
-        self.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.")
+        self.consume(
+            TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body."
+        )
         body = self.block()  # block() assumes { has already been matched
 
         return st.Function(name, params, body)
@@ -128,19 +134,30 @@ class Parser:
 
     def class_declaration(self):
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+
+        superclass = None
+        if self.match(TokenType.LESS):
+            self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = ex.Variable(self.previous())
+
         self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+
         methods = []
         while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
             methods.append(self.function("method"))
+
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-        return st.Class(name, methods)
+
+        return st.Class(name, superclass, methods)
 
     def var_declaration(self):
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
         initializer = None
         if self.match(TokenType.EQUAL):
             initializer = self.expression()
-        self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        self.consume(
+            TokenType.SEMICOLON, "Expect ';' after variable declaration."
+        )
         return st.Var(name, initializer)
 
     def while_statement(self):
@@ -285,7 +302,9 @@ class Parser:
             while self.match(TokenType.COMMA):
                 args.append(self.expression())
 
-        paren = self.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+        paren = self.consume(
+            TokenType.RIGHT_PAREN, "Expect ')' after arguments."
+        )
 
         if len(args) >= 255:  # NOTE: Needed in part 3
             self.error(self.peek(), "Can't have more than 255 arguments.")
@@ -302,11 +321,17 @@ class Parser:
         ):
             return ex.Literal(self.previous().literal)
 
-        if self.match(TokenType.THIS):
-            return ex.This(self.previous())
-
         if self.match(TokenType.IDENTIFIER):
             return ex.Variable(self.previous())
+
+        if self.match(TokenType.SUPER):
+            keyword = self.previous()
+            self.consume(TokenType.DOT, "Expect a '.' after super.")
+            method = self.consume(TokenType.IDENTIFIER, "Expect a method name.")
+            return ex.Super(keyword, method)
+
+        if self.match(TokenType.THIS):
+            return ex.This(self.previous())
 
         if self.match(TokenType.LEFT_PAREN):
             expr = self.expression()

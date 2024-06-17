@@ -12,16 +12,17 @@ def main(args):
         output_dir,
         "Expr",
         [
-            "Assign | name: Token, value: Expr",
-            "Binary | left: Expr, operator: Token, right: Expr",
-            "Call | callee: Expr, paren: Token, args: list[Expr]",
-            "Get | obj: Expr, name: Token",
+            "Assign   | name: Token, value: Expr",
+            "Binary   | left: Expr, operator: Token, right: Expr",
+            "Call     | callee: Expr, paren: Token, args: list[Expr]",
+            "Get      | obj: Expr, name: Token",
             "Grouping | expression: Expr",
-            "Literal | value",
-            "Logical | left: Expr, operator: Token, right: Expr",
-            "Set | obj: Expr, name: Token, value: Expr",
-            "This | keyword: Token",
-            "Unary | operator: Token, right: Expr",
+            "Literal  | value",
+            "Logical  | left: Expr, operator: Token, right: Expr",
+            "Set      | obj: Expr, name: Token, value: Expr",
+            "Super    | keyword: Token, method: Token",
+            "This     | keyword: Token",
+            "Unary    | operator: Token, right: Expr",
             "Variable | name: Token",
         ],
         ["from token_ import Token"],
@@ -31,17 +32,19 @@ def main(args):
         output_dir,
         "Stmt",
         [
-            "Block | statements: list[Stmt]",
-            'Class | name: Token, methods: list["Function"]',
+            "Block      | statements: list[Stmt]",
+            "Class      | name: Token, superclass: Variable | None,"
+            + ' methods: list["Function"]',
             "Expression | expression: Expr",
-            "Function | name: Token, params: list[Token], body: list[Stmt]",
-            "If | condition: Expr, then_branch: Stmt, else_branch: Stmt | None",
-            "Print | expression: Expr",
-            "Return | keyword: Token, val: Expr | None",
-            "Var | name: Token, initializer: Expr | None",
-            "While | condition: Expr, body: Stmt",
+            "Function   | name: Token, params: list[Token], body: list[Stmt]",
+            "If         | condition: Expr, then_branch: Stmt,"
+            + " else_branch: Stmt | None",
+            "Print      | expression: Expr",
+            "Return     | keyword: Token, val: Expr | None",
+            "Var        | name: Token, initializer: Expr | None",
+            "While      | condition: Expr, body: Stmt",
         ],
-        ["from expr import Expr", "from token_ import Token"],
+        ["from expr import Expr, Variable", "from token_ import Token"],
     )
 
 
@@ -96,7 +99,18 @@ def define_visitor(output_file, base_name, types):
 def define_type(output_file, base_name, class_name, field_list):
     output_file.write("\n\n")
     output_file.write(f"class {class_name}({base_name}):\n")
-    output_file.write(f"    def __init__(self, {field_list}):\n")
+
+    # Follow 80 char limit
+    if len(field_list) < 55:
+        output_file.write(f"    def __init__(self, {field_list}):\n")
+    elif len(field_list) < 65:
+        output_file.write("    def __init__(\n")
+        output_file.write("        self, " + field_list)
+        output_file.write("\n    ):\n")
+    else:
+        output_file.write("    def __init__(\n        ")
+        output_file.write(",\n        ".join(["self"] + field_list.split(", ")))
+        output_file.write(",\n    ):\n")
 
     # Store parameters in fields
     fields = field_list.split(", ")
@@ -108,7 +122,8 @@ def define_type(output_file, base_name, class_name, field_list):
     # Visitor Pattern
     output_file.write("    def accept(self, visitor: Visitor):\n")
     output_file.write(
-        f"        return visitor.visit_{class_name.lower()}_{base_name.lower()}(self)\n"
+        f"        return visitor.visit_"
+        f"{class_name.lower()}_{base_name.lower()}(self)\n"
     )
 
 
