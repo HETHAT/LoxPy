@@ -10,7 +10,7 @@ class ErrorHandler:
 
     @classmethod
     def runtime_error(cls, error: "RuntimeErr"):
-        print(error.args[0] + f"\n[line {error.token.line}]")
+        print(f"[line {error.token.line}]: {error.args[0]}")
         cls.had_runtime_error = True
 
     @classmethod
@@ -42,3 +42,7 @@ class RuntimeErr(RuntimeError):
     def __init__(self, *args: object, token) -> None:
         super().__init__(*args)
         self.token = token
+
+
+class ZeroDivisionErr(RuntimeErr):
+    pass

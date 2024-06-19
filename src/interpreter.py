@@ -2,7 +2,7 @@ import expr as ex
 import native_functions
 import stmt as st
 from environment import Environment
-from error_handler import ErrorHandler, Return, RuntimeErr
+from error_handler import ErrorHandler, Return, RuntimeErr, ZeroDivisionErr
 from lox_class import LoxClass
 from lox_function import LoxFunction
 from lox_instance import LoxInstance
@@ -141,7 +141,12 @@ class Interpreter(ex.Visitor, st.Visitor):
                 return left * right
             case TokenType.SLASH:
                 self.check_number_ops(TokenType.SLASH, left, right)
-                return left / right
+                try:
+                    return left / right
+                except ZeroDivisionError:
+                    raise ZeroDivisionErr(
+                        "Can't divide by zero.", token=expr.operator
+                    )
             case TokenType.GREATER:
                 self.check_number_ops(TokenType.GREATER, left, right)
                 return left > right
