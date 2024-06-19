@@ -2,7 +2,7 @@ import expr as ex
 import native_functions
 import stmt as st
 from environment import Environment
-from error_handler import ErrorHandler, Return, RuntimeErr, ZeroDivisionErr
+from error_handler import ErrorHandler, Return, RuntimeErr
 from lox_class import LoxClass
 from lox_function import LoxFunction
 from lox_instance import LoxInstance
@@ -14,8 +14,12 @@ class Interpreter(ex.Visitor, st.Visitor):
 
     def __init__(self) -> None:
         self.env = self.globals_
-        self.globals_.define("clock", native_functions.Clock())
+        self._define_built_ins()
         self.locals: dict[ex.Expr, int] = {}
+
+    def _define_built_ins(self):
+        for name, func in native_functions.built_ins.items():
+            self.globals_.define(name, func)
 
     def interpret(self, statements: list[st.Stmt]):
         try:
@@ -144,7 +148,7 @@ class Interpreter(ex.Visitor, st.Visitor):
                 try:
                     return left / right
                 except ZeroDivisionError:
-                    raise ZeroDivisionErr(
+                    raise RuntimeErr(
                         "Can't divide by zero.", token=expr.operator
                     )
             case TokenType.GREATER:
@@ -174,7 +178,10 @@ class Interpreter(ex.Visitor, st.Visitor):
                 f"Expected {callee.arity()} arguments got {len(args)}.",
                 token=expr.paren,
             )
-        return callee.call(self, args)
+        try:
+            return callee.call(self, args)
+        except Exception as e:
+            raise RuntimeErr(e.args[0], token=expr.paren)
 
     def visit_get_expr(self, expr: ex.Get):
         obj = self.evaluate(expr.obj)

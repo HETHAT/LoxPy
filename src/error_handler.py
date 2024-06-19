@@ -42,7 +42,3 @@ class RuntimeErr(RuntimeError):
     def __init__(self, *args: object, token) -> None:
         super().__init__(*args)
         self.token = token
-
-
-class ZeroDivisionErr(RuntimeErr):
-    pass

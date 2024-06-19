@@ -1,0 +1,3 @@
+var name = input();
+print "Hello " + name + "!";
+print length(name);
