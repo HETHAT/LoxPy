@@ -1,0 +1,8 @@
+fun factorial(n){
+    var res = 1;
+    for (var i = 1; i <= n; i = i +1){
+        res = res * i;
+    }
+    return res;
+}
+print factorial(10);  // 3628800

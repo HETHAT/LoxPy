@@ -1,0 +1,14 @@
+class Animal {
+    speak() {
+        print "Animal sound";
+    }
+}
+
+class Dog < Animal {
+    speak() {
+        print "Woof!";
+    }
+}
+
+var dog = Dog();
+dog.speak(); // Woof!
