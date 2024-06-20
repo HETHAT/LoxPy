@@ -1,3 +1,4 @@
+import math
 import time
 
 from lox_callable import LoxCallable
@@ -46,3 +47,14 @@ class Length(LoxCallable):
 
     def __str__(self) -> str:
         return "<native length fn>"
+
+
+@define
+class Floor(LoxCallable):
+    def arity(self) -> int:
+        return 1
+
+    def call(self, interpreter, args):
+        if not isinstance(args[0], int):
+            raise Exception("Expect number argument.")
+        return math.floor(args[0])
