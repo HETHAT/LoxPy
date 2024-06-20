@@ -263,6 +263,7 @@ class Parser:
         while self.match(
             TokenType.STAR,
             TokenType.SLASH,
+            TokenType.MOD,
         ):
             op = self.previous()
             right = self.unary()

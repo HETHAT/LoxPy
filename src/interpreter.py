@@ -148,9 +148,13 @@ class Interpreter(ex.Visitor, st.Visitor):
                 try:
                     return left / right
                 except ZeroDivisionError:
-                    raise RuntimeErr(
-                        "Can't divide by zero.", token=expr.operator
-                    )
+                    raise RuntimeErr("Division by zero.", token=expr.operator)
+            case TokenType.MOD:
+                self.check_number_ops(TokenType.MOD, left, right)
+                try:
+                    return left % right
+                except ZeroDivisionError:
+                    raise RuntimeErr("Modulo by zero.", token=expr.operator)
             case TokenType.GREATER:
                 self.check_number_ops(TokenType.GREATER, left, right)
                 return left > right

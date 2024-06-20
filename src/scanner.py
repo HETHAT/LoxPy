@@ -40,6 +40,7 @@ class Scanner:
             "+": TokenType.PLUS,
             ";": TokenType.SEMICOLON,
             "*": TokenType.STAR,
+            "%": TokenType.MOD,
         }
 
     def scan_tokens(self) -> list[Token]:
