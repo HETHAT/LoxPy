@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
 from expr import Expr, Variable
-from token_ import Token
+from tokens import Token
 
 V = TypeVar("V")
 

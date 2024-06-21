@@ -1,5 +1,7 @@
 from enum import Enum
 
+__all__ = "TokenType", "Token"
+
 TokenType = Enum(
     "TokenType",
     """
@@ -17,3 +19,14 @@ TokenType = Enum(
     EOF
     """,
 )
+
+
+class Token:
+    def __init__(self, type: TokenType, lexeme: str, literal, line: int):
+        self.type = type
+        self.lexeme = lexeme
+        self.literal = literal
+        self.line = line
+
+    def __str__(self) -> str:
+        return f"{self.type.name} {self.lexeme} {self.literal}"

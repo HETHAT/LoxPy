@@ -25,7 +25,7 @@ def main(args):
             "Unary    | operator: Token, right: Expr",
             "Variable | name: Token",
         ],
-        ["from token_ import Token"],
+        ["from tokens import Token"],
     )
 
     define_ast(
@@ -44,7 +44,7 @@ def main(args):
             "Var        | name: Token, initializer: Expr | None",
             "While      | condition: Expr, body: Stmt",
         ],
-        ["from expr import Expr, Variable", "from token_ import Token"],
+        ["from expr import Expr, Variable", "from tokens import Token"],
     )
 
 

@@ -6,7 +6,7 @@ from error_handler import ErrorHandler, Return, RuntimeErr
 from lox_class import LoxClass
 from lox_function import LoxFunction
 from lox_instance import LoxInstance
-from token_type import TokenType
+from tokens import TokenType
 
 
 class Interpreter(ex.Visitor, st.Visitor):

@@ -1,16 +1,11 @@
-from typing import TYPE_CHECKING
-
 import expr as ex
 import stmt as st
 from error_handler import ErrorHandler, ParseErr
-from token_type import TokenType
-
-if TYPE_CHECKING:
-    from token_ import Token
+from tokens import Token, TokenType
 
 
 class Parser:
-    def __init__(self, tokens: list["Token"]) -> None:
+    def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.cur = 0
 
@@ -347,12 +342,12 @@ class Parser:
 
         raise self.error(self.peek(), msg)
 
-    def advance(self) -> "Token":
+    def advance(self) -> Token:
         if not self.is_at_end():
             self.cur += 1
         return self.previous()
 
-    def previous(self) -> "Token":
+    def previous(self) -> Token:
         return self.tokens[self.cur - 1]
 
     def match(self, *types: TokenType) -> bool:
@@ -369,13 +364,13 @@ class Parser:
 
         return self.peek().type == type
 
-    def peek(self) -> "Token":
+    def peek(self) -> Token:
         return self.tokens[self.cur]
 
     def is_at_end(self) -> bool:
         return self.peek().type == TokenType.EOF
 
-    def error(self, token: "Token", msg: str):
+    def error(self, token: Token, msg: str):
         ErrorHandler.error(token, msg)
         return ParseErr()
 

@@ -8,7 +8,7 @@ from lox_function import FunctionType
 
 if TYPE_CHECKING:
     import interpreter
-    from token_ import Token
+    from tokens import Token
 
 
 class Resolver(ex.Visitor, st.Visitor):

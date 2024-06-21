@@ -1,7 +1,6 @@
 import sys
 
-from token_ import Token
-from token_type import TokenType
+from tokens import Token, TokenType
 
 
 class ErrorHandler:
