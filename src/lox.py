@@ -13,8 +13,9 @@ interpreter = Interpreter()
 def run(content: str) -> None:
     scanner = Scanner(content)
     tokens = scanner.scan_tokens()
+
     parser = Parser(tokens)
-    statements = parser.parse()
+    statements = parser.parse(can_be_expr=True)
 
     # Stop if there was a syntax error.
     if ErrorHandler.had_error:

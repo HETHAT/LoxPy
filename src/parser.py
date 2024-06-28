@@ -9,7 +9,15 @@ class Parser:
         self.tokens = tokens
         self.cur = 0
 
-    def parse(self) -> list[st.Stmt]:
+    def parse(self, can_be_expr: bool = False) -> list[st.Stmt]:
+        if can_be_expr and self.tokens[-2].type not in (
+            TokenType.SEMICOLON,
+            TokenType.RIGHT_BRACE,
+        ):
+            expr = self.expression()
+            # This feels dirty
+            return [st.Print(expr)]
+
         statements = []
         while not self.is_at_end():
             statements.append(self.declaration())

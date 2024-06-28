@@ -33,9 +33,11 @@ Replace "example.lox" with the path to your Lox file.
 
 ```bash
 $ python3 ./src/lox
-> name = "Med";
-> print "Hello, " + name;
+> var name = "Med";
+> "Hello, " + name
 Hello, Med
+> -(1 + 2) * (6 / 3)
+-6
 ```
 
 More examples available [here](/examples).
